@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEM6 誤結線検出アプリ - インタラクティブデモ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .demo-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .demo-header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .demo-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .device-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .device-selector button {
+            padding: 10px 20px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .device-selector button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .device-selector button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .emulator-container {
+            background: #1a1a1a;
+            border-radius: 30px;
+            padding: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .emulator-container.phone {
+            width: 405px;
+        }
+
+        .emulator-container.tablet {
+            width: 810px;
+        }
+
+        .device-frame {
+            background: black;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .device-frame.phone {
+            width: 375px;
+            height: 667px;
+        }
+
+        .device-frame.tablet {
+            width: 768px;
+            height: 1024px;
+        }
+
+        .status-bar {
+            height: 24px;
+            background: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 11px;
+            color: white;
+        }
+
+        .status-bar-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-bar-right {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .app-screen {
+            height: calc(100% - 24px);
+            background: #f5f5f5;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .header {
+            background: #aa0000;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .help-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .welcome-section h3 {
+            color: #aa0000;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .welcome-section p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .feature-card:active {
+            transform: scale(0.98);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .feature-text p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .chevron {
+            color: #999;
+            font-size: 20px;
+        }
+
+        .connection-status {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+
+        .status-indicator.connected {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76,175,80,0.5);
+        }
+
+        .status-indicator.connecting {
+            background: #ff9800;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.error {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .status-text h4 {
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .status-text p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 10px;
+        }
+
+        .action-button.primary {
+            background: #aa0000;
+            color: white;
+        }
+
+        .action-button.secondary {
+            background: #2196f3;
+            color: white;
+        }
+
+        .action-button.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .action-button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .data-grid {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .data-grid-header {
+            background: #f0f0f0;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-grid-row {
+            display: flex;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-grid-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-grid-label {
+            flex: 1;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .data-grid-value {
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .info-section {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-section h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-item-icon {
+            color: #4caf50;
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .info-item p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .timer-display {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .timer-display h3 {
+            font-size: 48px;
+            color: #aa0000;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-display p {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .excel-format-selector {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .format-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .format-option:hover {
+            border-color: #aa0000;
+            background: #fff5f5;
+        }
+
+        .format-option.selected {
+            border-color: #aa0000;
+            background: #fff5f5;
+        }
+
+        .format-option h4 {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .format-option p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-badge.normal {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .result-badge.abnormal {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .info-panel {
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 40px;
+            padding: 0 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .info-card h2 {
+            color: #aa0000;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .info-card h3 {
+            color: #333;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .info-card ul {
+            color: #666;
+            line-height: 1.8;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .download-btn.primary {
+            background: #aa0000;
+            color: white;
+        }
+
+        .download-btn.github {
+            background: #333;
+            color: white;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #aa0000;
+        }
+
+        .feature-item h4 {
+            color: #aa0000;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .feature-item p {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .emulator-container {
+                transform: scale(0.9);
+            }
+            
+            .demo-header h1 {
+                font-size: 22px;
+            }
+
+            .info-panel {
+                margin-top: 20px;
+            }
+
+            .info-card {
+                padding: 20px;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+            }
+
+            .download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>CEM6 誤結線検出アプリ</h1>
+        <p>インタラクティブデモ - スマートフォン・タブレットでの動作確認</p>
+    </div>
+
+    <div class="device-selector">
+        <button class="device-btn active" onclick="switchDevice('phone')">📱 スマートフォン</button>
+        <button class="device-btn" onclick="switchDevice('tablet')">📱 タブレット</button>
+    </div>
+
+    <div class="emulator-container phone" id="emulator">
+        <div class="device-frame phone" id="deviceFrame">
+            <div class="status-bar">
+                <div class="status-bar-left">
+                    <span id="time">12:34</span>
+                </div>
+                <div class="status-bar-right">
+                    <span>📶</span>
+                    <span>📡</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+            
+            <div class="app-screen">
+                <!-- ホーム画面 -->
+                <div class="screen active" id="homeScreen">
+                    <div class="header">
+                        <h2>CEM6 誤結線検出</h2>
+                        <button class="help-btn" onclick="showHelp()">ⓘ</button>
+                    </div>
+                    <div class="content">
+                        <div class="welcome-section">
+                            <h3>ようこそ</h3>
+                            <p>電力量計の計器情報取得、誤結線判定、計量試験を行います。</p>
+                        </div>
+
+                        <div class="feature-card" onclick="navigateTo('meterInfo')">
+                            <div class="feature-icon" style="background: #2196f3;">ℹ️</div>
+                            <div class="feature-text">
+                                <h4>計器情報取得</h4>
+                                <p>TP-BT経由で電力量計の詳細情報を取得</p>
+                            </div>
+                            <span class="chevron">›</span>
+                        </div>
+
+                        <div class="feature-card" onclick="navigateTo('misconnection')">
+                            <div class="feature-icon" style="background: #ff9800;">⚠️</div>
+                            <div class="feature-text">
+                                <h4>誤結線確認</h4>
+                                <p>CEM6シリーズの配線チェック・異常判定</p>
+                            </div>
+                            <span class="chevron">›</span>
+                        </div>
+
+                        <div class="feature-card" onclick="navigateTo('measurement')">
+                            <div class="feature-icon" style="background: #4caf50;">📊</div>
+                            <div class="feature-text">
+                                <h4>計量値確認</h4>
+                                <p>計量値の自動取得と差分計算</p>
+                            </div>
+                            <span class="chevron">›</span>
+                        </div>
+
+                        <div class="info-section">
+                            <h4>使用前の確認事項</h4>
+                            <div class="info-item">
+                                <span class="info-item-icon">✓</span>
+                                <p>TP-BTデバイスとペアリング済みであることを確認してください</p>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-icon">✓</span>
+                                <p>Bluetooth通信が有効になっていることを確認してください</p>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-icon">✓</span>
+                                <p>電力量計が測定可能な状態であることを確認してください</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 計器情報取得画面 -->
+                <div class="screen" id="meterInfoScreen">
+                    <div class="header">
+                        <button class="help-btn" onclick="navigateTo('home')">‹ 戻る</button>
+                        <h2>計器情報取得</h2>
+                        <button class="help-btn" onclick="showHelp()">ⓘ</button>
+                    </div>
+                    <div class="content">
+                        <div class="connection-status">
+                            <div class="status-indicator" id="meterStatusIndicator"></div>
+                            <div class="status-text">
+                                <h4 id="meterStatusText">未接続</h4>
+                                <p id="meterDeviceName">TP-BTデバイスに接続してください</p>
+                            </div>
+                        </div>
+
+                        <button class="action-button primary" id="meterConnectBtn" onclick="connectMeterBluetooth()">
+                            Bluetooth接続
+                        </button>
+
+                        <button class="action-button secondary" id="meterFetchBtn" onclick="fetchMeterInfo()" disabled>
+                            計器情報取得
+                        </button>
+
+                        <div id="meterInfoData" style="display: none;">
+                            <div class="data-grid">
+                                <div class="data-grid-header">基本情報</div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">計器ID</div>
+                                    <div class="data-grid-value">CEM6-001234</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">製造No</div>
+                                    <div class="data-grid-value">2024010123456</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">形名</div>
+                                    <div class="data-grid-value">CEM6-3P3W</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">相線式</div>
+                                    <div class="data-grid-value">三相3線式</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">定格電圧</div>
+                                    <div class="data-grid-value">200 V</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">定格電流</div>
+                                    <div class="data-grid-value">60 A</div>
+                                </div>
+                            </div>
+
+                            <div class="data-grid">
+                                <div class="data-grid-header">計量値情報</div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">有効電力量</div>
+                                    <div class="data-grid-value">12,345.67 kWh</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">無効電力量</div>
+                                    <div class="data-grid-value">2,345.12 kvarh</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">現在電力</div>
+                                    <div class="data-grid-value">3.45 kW</div>
+                                </div>
+                            </div>
+
+                            <button class="action-button success" onclick="navigateTo('excelExport')">
+                                Excel出力
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 誤結線確認画面 -->
+                <div class="screen" id="misconnectionScreen">
+                    <div class="header">
+                        <button class="help-btn" onclick="navigateTo('home')">‹ 戻る</button>
+                        <h2>誤結線確認</h2>
+                        <button class="help-btn" onclick="showHelp()">ⓘ</button>
+                    </div>
+                    <div class="content">
+                        <div class="connection-status">
+                            <div class="status-indicator" id="misconnStatusIndicator"></div>
+                            <div class="status-text">
+                                <h4 id="misconnStatusText">未接続</h4>
+                                <p id="misconnDeviceName">TP-BTデバイスに接続してください</p>
+                            </div>
+                        </div>
+
+                        <button class="action-button primary" id="misconnConnectBtn" onclick="connectMisconnBluetooth()">
+                            Bluetooth接続
+                        </button>
+
+                        <div class="form-group">
+                            <label>相線式</label>
+                            <select id="phaseWireType">
+                                <option value="THREE_PHASE_3_WIRE">三相3線式</option>
+                                <option value="THREE_PHASE_4_WIRE">三相4線式</option>
+                                <option value="SINGLE_PHASE_2_WIRE">単相2線式</option>
+                                <option value="SINGLE_PHASE_3_WIRE">単相3線式</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>定格電圧 (V)</label>
+                            <select id="ratedVoltage">
+                                <option value="200">200 V</option>
+                                <option value="100">100 V</option>
+                                <option value="400">400 V</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>接続機器</label>
+                            <select id="connectedDevice">
+                                <option value="SIMULATED_LOAD">模擬負荷</option>
+                                <option value="WIRING_CHECKER">配線チェック機</option>
+                            </select>
+                        </div>
+
+                        <button class="action-button secondary" id="misconnCheckBtn" onclick="checkMisconnection()" disabled>
+                            配線チェック実行
+                        </button>
+
+                        <div id="misconnectionResult" style="display: none;">
+                            <div class="data-grid">
+                                <div class="data-grid-header">判定結果</div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">総合判定</div>
+                                    <div class="data-grid-value">
+                                        <span class="result-badge normal">正常</span>
+                                    </div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">検出パターン</div>
+                                    <div class="data-grid-value">-</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">検査日時</div>
+                                    <div class="data-grid-value" id="checkDateTime"></div>
+                                </div>
+                            </div>
+
+                            <div class="data-grid">
+                                <div class="data-grid-header">測定値</div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">P1 有効電力</div>
+                                    <div class="data-grid-value">1.23 kW</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">P1 無効電力</div>
+                                    <div class="data-grid-value">0.45 kvar</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">P3 有効電力</div>
+                                    <div class="data-grid-value">1.21 kW</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">P3 無効電力</div>
+                                    <div class="data-grid-value">0.43 kvar</div>
+                                </div>
+                            </div>
+
+                            <button class="action-button success" onclick="navigateTo('excelExport')">
+                                Excel出力
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 計量値確認画面 -->
+                <div class="screen" id="measurementScreen">
+                    <div class="header">
+                        <button class="help-btn" onclick="navigateTo('home')">‹ 戻る</button>
+                        <h2>計量値確認</h2>
+                        <button class="help-btn" onclick="showHelp()">ⓘ</button>
+                    </div>
+                    <div class="content">
+                        <div class="connection-status">
+                            <div class="status-indicator" id="measureStatusIndicator"></div>
+                            <div class="status-text">
+                                <h4 id="measureStatusText">未接続</h4>
+                                <p id="measureDeviceName">TP-BTデバイスに接続してください</p>
+                            </div>
+                        </div>
+
+                        <button class="action-button primary" id="measureConnectBtn" onclick="connectMeasureBluetooth()">
+                            Bluetooth接続
+                        </button>
+
+                        <div class="timer-display">
+                            <h3 id="timerDisplay">00:00</h3>
+                            <p>計量試験タイマー</p>
+                        </div>
+
+                        <button class="action-button secondary" id="measureStartBtn" onclick="startMeasurement()" disabled>
+                            計量開始
+                        </button>
+
+                        <button class="action-button" id="measureStopBtn" onclick="stopMeasurement()" disabled style="background: #f44336; color: white;">
+                            計量停止
+                        </button>
+
+                        <div id="measurementData" style="display: none;">
+                            <div class="data-grid">
+                                <div class="data-grid-header">計量記録</div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">開始値</div>
+                                    <div class="data-grid-value">12,345.67 kWh</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">終了値</div>
+                                    <div class="data-grid-value">12,346.12 kWh</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">差分</div>
+                                    <div class="data-grid-value" style="color: #aa0000; font-weight: 700;">0.45 kWh</div>
+                                </div>
+                                <div class="data-grid-row">
+                                    <div class="data-grid-label">計量時間</div>
+                                    <div class="data-grid-value" id="measurementTime">0秒</div>
+                                </div>
+                            </div>
+
+                            <button class="action-button success" onclick="navigateTo('excelExport')">
+                                Excel出力
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Excel出力画面 -->
+                <div class="screen" id="excelExportScreen">
+                    <div class="header">
+                        <button class="help-btn" onclick="navigateTo('home')">‹ 戻る</button>
+                        <h2>Excel出力</h2>
+                        <button class="help-btn" onclick="showHelp()">ⓘ</button>
+                    </div>
+                    <div class="content">
+                        <div class="excel-format-selector">
+                            <h4 style="margin-bottom: 15px; color: #333;">出力フォーマット選択</h4>
+                            
+                            <div class="format-option selected" onclick="selectFormat('A')">
+                                <h4>📄 フォーマットA (きんでん社用)</h4>
+                                <p>計量対象名、階、設置場所等の詳細情報を含む</p>
+                            </div>
+
+                            <div class="format-option" onclick="selectFormat('B')">
+                                <h4>📄 フォーマットB (大崎標準)</h4>
+                                <p>標準的な計器情報・判定結果</p>
+                            </div>
+
+                            <div class="format-option" onclick="selectFormat('C')">
+                                <h4>📄 フォーマットC (スパイダープラス連携)</h4>
+                                <p>外部システム連携用フォーマット</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>計量対象名（任意）</label>
+                            <input type="text" placeholder="例: A棟3階" id="targetName">
+                        </div>
+
+                        <div class="form-group">
+                            <label>設置場所（任意）</label>
+                            <input type="text" placeholder="例: 電気室" id="location">
+                        </div>
+
+                        <div class="form-group">
+                            <label>備考（任意）</label>
+                            <input type="text" placeholder="例: 定期点検" id="remarks">
+                        </div>
+
+                        <button class="action-button success" onclick="exportExcel()">
+                            Excelファイル出力
+                        </button>
+
+                        <div class="info-section" style="margin-top: 15px;">
+                            <h4>出力情報</h4>
+                            <div class="info-item">
+                                <span class="info-item-icon">✓</span>
+                                <p>ファイルはDownloadsフォルダに保存されます</p>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-icon">✓</span>
+                                <p>ファイル名: CEM6_誤結線検出_YYYYMMDD_HHMMSS.xlsx</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- 情報パネル -->
+    <div class="info-panel">
+        <div class="info-card">
+            <h2>📱 プロジェクト概要</h2>
+            <p>このデモサイトは、大崎電気工業株式会社のCEM6シリーズ電力量計向け誤結線検出モバイルアプリのUIを、Webブラウザ上で完全に体験できるインタラクティブなデモンストレーションです。</p>
+        </div>
+
+        <div class="info-card">
+            <h2>✨ 実装済み機能</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h4>📊 計器情報取得</h4>
+                    <p>TP-BT経由で電力量計の詳細情報を取得・表示</p>
+                </div>
+                <div class="feature-item">
+                    <h4>⚠️ 誤結線確認</h4>
+                    <p>42パターンの異常検知と配線チェック</p>
+                </div>
+                <div class="feature-item">
+                    <h4>⏱️ 計量値確認</h4>
+                    <p>リアルタイムタイマーで計量試験を実施</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📄 Excel出力</h4>
+                    <p>3つのフォーマット（A/B/C）で結果を出力</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h2>🚀 実際のアプリ</h2>
+            <p>このデモサイトはUIの確認用です。実際のBluetooth通信や計器データ取得を行うには、本物のReact Nativeアプリをご利用ください。</p>
+            
+            <h3>📦 APKダウンロード</h3>
+            <div class="download-buttons">
+                <a href="https://github.com/IB6644/CEM6-MisconnectionDetect/releases/download/v1.0.0/CEM6-MisconnectionDetect-v1.0.0.apk" class="download-btn primary" download>
+                    📱 APK v1.0.0 をダウンロード
+                </a>
+                <a href="https://github.com/IB6644/CEM6-MisconnectionDetect/blob/main/BUILD_APK_MAC.md" class="download-btn primary" target="_blank">
+                    📝 APKビルド手順を見る
+                </a>
+            </div>
+
+            <h3>💻 React Nativeプロジェクト</h3>
+            <div class="download-buttons">
+                <a href="https://github.com/IB6644/CEM6-MisconnectionDetect" class="download-btn github" target="_blank">
+                    ⚡ CEM6-MisconnectionDetect リポジトリ
+                </a>
+            </div>
+        </div>
+
+        <div class="info-card" style="text-align: center; background: #f8f9fa;">
+            <p style="margin: 0; color: #666;">
+                © 2025 大崎電気工業株式会社 インキュベーション室<br>
+                プロジェクトマネージャー: 梅澤優一（Ume）
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let currentDevice = 'phone';
+        let currentScreen = 'home';
+        let measurementTimer = null;
+        let measurementTime = 0;
+        let selectedFormat = 'A';
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function switchDevice(device) {
+            currentDevice = device;
+            document.querySelectorAll('.device-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            
+            const container = document.getElementById('emulator');
+            const frame = document.getElementById('deviceFrame');
+            if (container) container.className = 'emulator-container ' + device;
+            if (frame) frame.className = 'device-frame ' + device;
+        }
+
+        function navigateTo(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen + 'Screen').classList.add('active');
+            currentScreen = screen;
+        }
+
+        function showHelp() {
+            alert('ヘルプ\n\nこのアプリはCEM6シリーズ電力メーターとBluetooth SPP通信を行い、メーター情報の取得、誤結線判定、測定データ記録を行います。');
+        }
+
+        function connectMeterBluetooth() {
+            const indicator = document.getElementById('meterStatusIndicator');
+            const statusText = document.getElementById('meterStatusText');
+            const deviceName = document.getElementById('meterDeviceName');
+            const connectBtn = document.getElementById('meterConnectBtn');
+            const fetchBtn = document.getElementById('meterFetchBtn');
+            
+            indicator.className = 'status-indicator connecting';
+            statusText.textContent = '接続中...';
+            
+            setTimeout(() => {
+                indicator.className = 'status-indicator connected';
+                statusText.textContent = '接続済み';
+                deviceName.textContent = 'TP-BT-001234';
+                connectBtn.textContent = 'Bluetooth切断';
+                fetchBtn.disabled = false;
+            }, 2000);
+        }
+
+        function fetchMeterInfo() {
+            document.getElementById('loadingOverlay').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                document.getElementById('meterInfoData').style.display = 'block';
+            }, 1500);
+        }
+
+        function connectMisconnBluetooth() {
+            const indicator = document.getElementById('misconnStatusIndicator');
+            const statusText = document.getElementById('misconnStatusText');
+            const deviceName = document.getElementById('misconnDeviceName');
+            const checkBtn = document.getElementById('misconnCheckBtn');
+            
+            indicator.className = 'status-indicator connecting';
+            statusText.textContent = '接続中...';
+            
+            setTimeout(() => {
+                indicator.className = 'status-indicator connected';
+                statusText.textContent = '接続済み';
+                deviceName.textContent = 'TP-BT-001234';
+                checkBtn.disabled = false;
+            }, 2000);
+        }
+
+        function checkMisconnection() {
+            document.getElementById('loadingOverlay').classList.add('active');
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                document.getElementById('misconnectionResult').style.display = 'block';
+                document.getElementById('checkDateTime').textContent = new Date().toLocaleString('ja-JP');
+            }, 2500);
+        }
+
+        function connectMeasureBluetooth() {
+            const indicator = document.getElementById('measureStatusIndicator');
+            const statusText = document.getElementById('measureStatusText');
+            const deviceName = document.getElementById('measureDeviceName');
+            const startBtn = document.getElementById('measureStartBtn');
+            
+            indicator.className = 'status-indicator connecting';
+            statusText.textContent = '接続中...';
+            
+            setTimeout(() => {
+                indicator.className = 'status-indicator connected';
+                statusText.textContent = '接続済み';
+                deviceName.textContent = 'TP-BT-001234';
+                startBtn.disabled = false;
+            }, 2000);
+        }
+
+        function startMeasurement() {
+            const startBtn = document.getElementById('measureStartBtn');
+            const stopBtn = document.getElementById('measureStopBtn');
+            const timerDisplay = document.getElementById('timerDisplay');
+            
+            measurementTime = 0;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            measurementTimer = setInterval(() => {
+                measurementTime++;
+                const minutes = Math.floor(measurementTime / 60).toString().padStart(2, '0');
+                const seconds = (measurementTime % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+            
+            document.getElementById('measurementData').style.display = 'block';
+        }
+
+        function stopMeasurement() {
+            const startBtn = document.getElementById('measureStartBtn');
+            const stopBtn = document.getElementById('measureStopBtn');
+            
+            clearInterval(measurementTimer);
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            document.getElementById('measurementTime').textContent = measurementTime + '秒';
+        }
+
+        function selectFormat(format) {
+            selectedFormat = format;
+            document.querySelectorAll('.format-option').forEach(option => option.classList.remove('selected'));
+            if (event && event.target) event.target.closest('.format-option').classList.add('selected');
+        }
+
+        function exportExcel() {
+            alert(`Excel形式${selectedFormat}でエクスポートしました\n(デモ版では実際のファイルは生成されません)`);
+        }
+    </script>
+</body>
+</html>
