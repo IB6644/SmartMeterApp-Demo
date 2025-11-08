@@ -1178,15 +1178,16 @@
             <h3>📦 Android APKダウンロード</h3>
             <p>Android実機で動作するAPKファイルをビルドできます：</p>
             <div class="download-buttons">
-                <a href="https://github.com/ib6644/CEM6-MisconnectionDetect" class="download-btn primary" target="_blank">
-                    📱 APKビルド手順を見る
-                </a>
+                <a href="https://github.com/IB6644/CEM6-MisconnectionDetect/blob/main/BUILD_APK_MAC.md" class="download-btn primary" target="_blank">
+    📱 APKビルド手順を見る
+</a>
+
             </div>
 
             <h3>💻 React Nativeプロジェクト</h3>
             <p>元のReact Nativeプロジェクトのソースコード：</p>
             <div class="download-buttons">
-                <a href="https://github.com/ib6644/CEM6-MisconnectionDetect" class="download-btn github" target="_blank">
+<a href="https://github.com/IB6644/CEM6-MisconnectionDetect" class="download-btn github" target="_blank">
                     <span>⚡</span> CEM6-MisconnectionDetect リポジトリ
                 </a>
             </div>
@@ -1300,16 +1301,26 @@
 
             // Device switching
             function switchDevice(device) {
-                currentDevice = device;
-                document.querySelectorAll('.device-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                event.target.classList.add('active');
-                
-                const container = document.getElementById('emulator');
-                container.className = 'emulator-container ' + device;
-            }
-
+    currentDevice = device;
+    document.querySelectorAll('.device-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+    
+    // Update emulator container
+    const container = document.getElementById('emulator');
+    if (container) {
+        container.className = 'emulator-container ' + device;
+    }
+    
+    // Update device frame
+    const frame = document.querySelector('.device-frame');
+    if (frame) {
+        frame.className = 'device-frame ' + device;
+    }
+}
             // Screen navigation
             function navigateTo(screen) {
                 // Hide all screens
@@ -1340,7 +1351,136 @@
             }
 
             // Connection functions
-            function connectBluetooth() {
+            function connectBluetooth()// Meter Info Bluetooth functions
+function connectMeterBluetooth() {
+    const indicator = document.getElementById('meterStatusIndicator');
+    const statusText = document.getElementById('meterStatusText');
+    const deviceName = document.getElementById('meterDeviceName');
+    const connectBtn = document.getElementById('meterConnectBtn');
+    const fetchBtn = document.getElementById('meterFetchBtn');
+    
+    indicator.className = 'status-indicator connecting';
+    statusText.textContent = '接続中...';
+    deviceName.textContent = 'TP-BTデバイスを検索中...';
+    
+    setTimeout(() => {
+        indicator.className = 'status-indicator connected';
+        statusText.textContent = '接続済み';
+        deviceName.textContent = 'TP-BT-001234';
+        connectBtn.textContent = 'Bluetooth切断';
+        fetchBtn.disabled = false;
+    }, 2000);
+}
+
+function fetchMeterInfo() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    loadingOverlay.classList.add('active');
+    
+    setTimeout(() => {
+        loadingOverlay.classList.remove('active');
+        document.getElementById('meterInfoData').style.display = 'block';
+    }, 1500);
+}
+
+// Misconnection Bluetooth functions
+function connectMisconnBluetooth() {
+    const indicator = document.getElementById('misconnStatusIndicator');
+    const statusText = document.getElementById('misconnStatusText');
+    const deviceName = document.getElementById('misconnDeviceName');
+    const connectBtn = document.getElementById('misconnConnectBtn');
+    const checkBtn = document.getElementById('misconnCheckBtn');
+    
+    indicator.className = 'status-indicator connecting';
+    statusText.textContent = '接続中...';
+    
+    setTimeout(() => {
+        indicator.className = 'status-indicator connected';
+        statusText.textContent = '接続済み';
+        deviceName.textContent = 'TP-BT-001234';
+        connectBtn.textContent = 'Bluetooth切断';
+        checkBtn.disabled = false;
+    }, 2000);
+}
+
+function checkMisconnection() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    loadingOverlay.classList.add('active');
+    
+    setTimeout(() => {
+        loadingOverlay.classList.remove('active');
+        document.getElementById('misconnectionResult').style.display = 'block';
+        document.getElementById('checkDateTime').textContent = new Date().toLocaleString('ja-JP');
+    }, 2500);
+}
+
+// Measurement Bluetooth functions
+function connectMeasureBluetooth() {
+    const indicator = document.getElementById('measureStatusIndicator');
+    const statusText = document.getElementById('measureStatusText');
+    const deviceName = document.getElementById('measureDeviceName');
+    const connectBtn = document.getElementById('measureConnectBtn');
+    const startBtn = document.getElementById('measureStartBtn');
+    
+    indicator.className = 'status-indicator connecting';
+    statusText.textContent = '接続中...';
+    
+    setTimeout(() => {
+        indicator.className = 'status-indicator connected';
+        statusText.textContent = '接続済み';
+        deviceName.textContent = 'TP-BT-001234';
+        connectBtn.textContent = 'Bluetooth切断';
+        startBtn.disabled = false;
+    }, 2000);
+}
+
+function startMeasurement() {
+    const startBtn = document.getElementById('measureStartBtn');
+    const stopBtn = document.getElementById('measureStopBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+    
+    isMeasuring = true;
+    measurementTime = 0;
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    
+    measurementTimer = setInterval(() => {
+        measurementTime++;
+        const minutes = Math.floor(measurementTime / 60).toString().padStart(2, '0');
+        const seconds = (measurementTime % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${seconds}`;
+    }, 1000);
+    
+    document.getElementById('measurementData').style.display = 'block';
+    document.getElementById('measurementTime').textContent = '0秒';
+}
+
+function stopMeasurement() {
+    const startBtn = document.getElementById('measureStartBtn');
+    const stopBtn = document.getElementById('measureStopBtn');
+    
+    isMeasuring = false;
+    clearInterval(measurementTimer);
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    
+    document.getElementById('measurementTime').textContent = measurementTime + '秒';
+}
+
+// Excel export functions
+let selectedFormat = 'A';
+
+function selectFormat(format) {
+    selectedFormat = format;
+    document.querySelectorAll('.format-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    event.target.closest('.format-option').classList.add('selected');
+}
+
+function exportExcel() {
+    alert(`Excel形式${selectedFormat}でエクスポートしました\n(デモ版では実際のファイルは生成されません)`);
+}
+ {
                 if (isConnected) {
                     // Disconnect
                     isConnected = false;
