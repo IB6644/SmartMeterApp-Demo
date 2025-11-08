@@ -1306,7 +1306,7 @@
                 });
                 event.target.classList.add('active');
                 
-                const container = document.getElementById('emulator-container');
+                const container = document.getElementById('emulator');
                 container.className = 'emulator-container ' + device;
             }
 
@@ -1511,14 +1511,6 @@
                 }
                 alert(`Excel形式${format}でエクスポートしました\n(デモ版では実際のファイルは生成されません)`);
             }
-
-            // Initialize info cards toggle
-            document.querySelectorAll('.info-card').forEach(card => {
-                const header = card.querySelector('.info-card-header');
-                header.addEventListener('click', () => {
-                    card.classList.toggle('collapsed');
-                });
-            });
         </script>
     </body>
 </html>
